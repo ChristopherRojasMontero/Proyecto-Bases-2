@@ -1,0 +1,17 @@
+{
+  "name": "cineadmin-backend",
+  "version": "0.1.0",
+  "description": "API de CineAdmin: monitoreo, administración y auditoría de SQL Server",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test:db": "node src/test-connection.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^18.0.3",
+    "express": "^5.2.1",
+    "mssql": "^12.7.2"
+  }
+}
