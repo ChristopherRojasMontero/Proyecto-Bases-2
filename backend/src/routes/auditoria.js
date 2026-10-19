@@ -1,4 +1,3 @@
-// Módulo 5 — Persona 5. Registrado en server.js bajo /api/auditoria.
 const express = require('express');
 const consultas = require('../queries/auditoria');
 const router = express.Router();
@@ -9,7 +8,6 @@ function responderError(res, error) {
     return res.status(403).json({ mensaje: 'La conexión no tiene permisos suficientes para consultar la auditoría.' });
   }
   if (error.status === 404) return res.status(404).json({ mensaje: 'Usuario administrativo inexistente.' });
-  // No enviar mensajes del driver: pueden contener datos de conexión o SQL interno.
   return res.status(500).json({ mensaje: 'No se pudo completar la consulta de auditoría.' });
 }
 

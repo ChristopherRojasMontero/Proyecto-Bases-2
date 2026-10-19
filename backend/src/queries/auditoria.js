@@ -1,4 +1,3 @@
-// Módulo 5 — consultas de lectura; la conexión pertenece a db.js.
 const { sql, getPool } = require('../db');
 
 const tiposUsuario = "('S', 'U', 'G', 'E', 'X', 'C', 'K')";
@@ -13,7 +12,6 @@ const usuariosSQL = `
 
 async function contexto(seguridad = false) {
   const pool = await getPool();
-  // Evita interpretar metadatos ocultos como ausencia de usuarios u objetos.
   const result = await pool.request().query(`
     SELECT DB_NAME() AS base_de_datos,
       HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'VIEW DEFINITION') AS ver_definicion,
@@ -107,7 +105,6 @@ async function obtenerPrivilegios(usuarioId = null) {
     const pendientes = [{ id: usuario.usuario_id, ruta: [] }];
     const publico = roles.find((rol) => rol.nombre === 'public');
     if (publico) pendientes.push({ id: publico.rol_id, ruta: ['public'] });
-    // Conserva una ruta representativa por principal y evita ciclos/repeticiones.
     const visitados = new Set();
     for (let i = 0; i < pendientes.length; i++) {
       const actual = pendientes[i];
@@ -131,8 +128,6 @@ async function obtenerPrivilegios(usuarioId = null) {
       }
     }
   }
-  // Sin filtro, conserva también asignaciones a roles vacíos u otros principales.
-  // No se atribuyen a un usuario que no ha sido alcanzado por una membresía.
   if (usuarioId === null) {
     for (const permiso of permisos) {
       if (!principalesAlcanzados.has(permiso.principal_id)) {
@@ -216,14 +211,11 @@ async function obtenerObjetosProblematicos() {
     } catch (error) {
       const numeros = numerosSQL(error);
       const conocidos = [2020, 207, 208, 209, 4104, 4121, 4413, 4512, 4513];
-      // Lista conservadora de errores de evaluación del objeto. No absorbe
-      // errores desconocidos, de permisos, recursos, conexión o timeout.
       const erroresNoEvaluables = [4502, 4514, 11514, 11526];
       if (error.code !== 'EREQUEST' || !numeros.length
           || numeros.some((n) => !conocidos.includes(n) && !erroresNoEvaluables.includes(n))
           || [error, ...(error.precedingErrors || [])].some((e) => e.class >= 20)) throw error;
       if (numeros.some((n) => erroresNoEvaluables.includes(n))) {
-        // El objeto no se cuenta como revisado si la evaluación no pudo completarse.
         datos.push({ ...identidad, categoria: 'NO_EVALUABLE', codigo: 'ERROR_EVALUACION',
           numero_error: numeros.find((n) => erroresNoEvaluables.includes(n)),
           mensaje: 'SQL Server no pudo evaluar los metadatos del objeto.' });
