@@ -112,3 +112,29 @@ Si la tercera consulta funciona, el permiso `VIEW SERVER STATE` quedó bien.
 - Nunca subir contraseñas reales al repositorio. La contraseña de `cine_app`
   se elige localmente y va únicamente en el archivo `.env` de cada persona,
   que está excluido por `.gitignore`.
+
+---
+
+## Aplicación web CineAdmin
+
+La aplicación se divide en una API Express (`backend/`) y una interfaz React
+(`frontend/`). Primero configura SQL Server y `backend/.env` según esta guía.
+Después, inicia cada parte en una terminal distinta:
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Abre `http://localhost:5173`. Vite reenvía las llamadas `/api` a la API del
+puerto 3000. La vista general y el Módulo 1 consultan información real de la
+instancia. Las otras vistas están preparadas para integrarse conforme se
+incorporen sus endpoints; se identifican como pendientes y no muestran datos
+simulados.
