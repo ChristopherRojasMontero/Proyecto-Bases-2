@@ -18,10 +18,9 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Aquí se registran las rutas de cada módulo, por ejemplo:
-// app.use('/api/instancia', require('./routes/instancia'));
+// Rutas de cada módulo (agregar todas ANTES de app.listen)
+app.use('/api/instancia', require('./routes/instancia'));         // Módulo 1 — Persona 1
+app.use('/api/almacenamiento', require('./routes/almacenamiento')); // Módulo 3 — Persona 3
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API escuchando en http://localhost:${PORT}`));
-
-app.use('/api/almacenamiento', require('./routes/almacenamiento'));
