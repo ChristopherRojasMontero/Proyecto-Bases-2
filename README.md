@@ -1,114 +1,106 @@
-# Base de datos CineStream
+# CineAdmin
 
-Scripts y guía para dejar una instancia de **SQL Server** lista para el proyecto CineStream / CineAdmin.
+Herramienta web para **monitorear, administrar y auditar una instancia de Microsoft SQL Server**.
+Proyecto Integrador del curso EIF402 – Administración de Bases de Datos (UNA, II Ciclo 2026).
+
+Como base de datos de trabajo se usa **CineStream**, una plataforma ficticia de
+alquiler de películas que le da volumen y actividad real a la instancia. Toda la
+información que muestra CineAdmin sale de consultas administrativas reales
+(vistas de catálogo, DMVs y `msdb`); no se usan datos simulados.
+
+## Arquitectura
+
+```
+React (frontend/)  --->  API REST Node.js + Express (backend/)  --->  SQL Server
+  vistas y gráficos        rutas -> consultas -> db.js (mssql)          CineStream + msdb
+```
+
+| Capa              | Carpeta                    | Responsabilidad                                    |
+|-------------------|----------------------------|----------------------------------------------------|
+| Presentación      | `frontend/`                | Dashboard y navegación entre los 6 módulos         |
+| Lógica / rutas    | `backend/src/routes/`      | Validación de parámetros, respuestas y errores     |
+| Acceso a datos    | `backend/src/queries/`, `backend/src/db.js` | Consultas SQL y conexión compartida |
+| Base de datos     | `database/`                | Scripts de CineStream, usuario y objetos `cineadmin` |
+
+## Módulos
+
+| Módulo | Tema                        | API                    | Responsable        |
+|--------|-----------------------------|------------------------|--------------------|
+| 1      | Estado de la instancia      | `/api/instancia`       | Persona 1          |
+| 2      | Monitoreo de rendimiento    | `/api/rendimiento`     | Persona 2          |
+| 3      | Gestión del almacenamiento  | `/api/almacenamiento`  | Persona 3          |
+| 4      | Respaldo y recuperación     | `/api/respaldo`        | Persona 4          |
+| 5      | Auditoría                   | `/api/auditoria`       | Persona 5          |
+| 6      | Mantenimiento preventivo    | `/api/mantenimiento`   | Persona 3 y 4      |
+
+Los contratos de cada API están en `backend/docs/`.
 
 ## Requisitos
 
-- SQL Server 2022 (Express o Developer) instalado y en ejecución.
-- SQL Server Management Studio (SSMS).
-- Node.js (para la aplicación; se usa en pasos posteriores).
+- Windows 10/11 (probado) con **SQL Server 2022** Express o Developer y **SSMS**.
+- **Node.js 18** o superior (probado con v22 y v24).
+- Git.
 
----
+## Instalación
 
-## Parte A. Configurar la instancia (una sola vez por computadora)
+### 1. Base de datos
 
-Estos pasos se hacen con las herramientas gráficas, no con scripts. Los ejemplos asumen una instancia llamada `SQLEXPRESS`.
+Seguir [`database/README.md`](database/README.md):
 
-### A1. Habilitar TCP/IP y fijar el puerto 1433
+1. Configurar la instancia (TCP/IP, modo mixto).
+2. Ejecutar los scripts `01` a `07` en orden.
+3. Verificar el usuario `cine_app`.
 
-1. Abrir **SQL Server 2022 Configuration Manager** (o `Windows + R` → `SQLServerManager16.msc`).
-2. **SQL Server Network Configuration → Protocols for SQLEXPRESS**.
-3. Click derecho en **TCP/IP → Enable**.
-4. Doble click en **TCP/IP → pestaña IP Addresses**, ir hasta la sección **IPAll**:
-   - **TCP Dynamic Ports:** vacío
-   - **TCP Port:** `1433`
-5. Aceptar (el reinicio se hace después del paso A2).
+### 2. Backend
 
-### A2. Activar el modo mixto de autenticación
-
-1. En SSMS, conectarse a `.\SQLEXPRESS` con Windows Authentication.
-2. Click derecho sobre el servidor → **Propiedades → Seguridad**.
-3. Elegir **Modo de autenticación de SQL Server y de Windows** y aceptar.
-
-### A3. Reiniciar el servicio
-
-En Configuration Manager: **SQL Server Services → SQL Server (SQLEXPRESS) → Restart**.
-
-### A4. Verificar el acceso por TCP
-
-En SSMS, **Connect → Database Engine**:
-
-- **Server name:** `localhost,1433` (con coma)
-- **Authentication:** Windows Authentication
-- Marcar **Trust server certificate**
-
-Si conecta, ejecutar:
-
-```sql
-SELECT local_tcp_port FROM sys.dm_exec_connections WHERE session_id = @@SPID;
+```
+cd backend
+npm install
+copy .env.example .env
 ```
 
-Debe devolver `1433`. (Con `.\SQLEXPRESS` devuelve `NULL`, es normal: usa memoria compartida, no TCP.)
+Abrir `backend/.env` y completar `DB_PASSWORD` (y `DB_INSTANCE` si no se usa el
+puerto 1433). Detalle de cada variable en [`backend/README.md`](backend/README.md).
 
----
-
-## Parte B. Crear la base de datos
-
-Ejecutar los scripts **en orden numérico** desde SSMS (abrir el archivo → F5):
-
-| Orden | Archivo                       | Qué hace                                          | Resultado esperado        |
-|-------|-------------------------------|---------------------------------------------------|---------------------------|
-| 1     | `01_crear_bd.sql`             | Crea la base de datos `CineStream`                | Commands completed        |
-| 2     | `02_crear_tablas.sql`         | Crea las 7 tablas                                 | 7 tablas en `dbo`         |
-| 3     | `03_seed_catalogos.sql`       | Géneros, actores, películas, usuarios             | 8, 10, 15, 25, 10         |
-| 4     | `04_seed_alquileres.sql`      | Genera 50.000 alquileres (tarda ~1-2 min)         | 50000                     |
-| 5     | `05_seed_resenas.sql`         | Genera 15.000 reseñas                             | 15000                     |
-| 6     | `06_crear_usuario_app.sql`    | Crea el usuario `cine_app` para la aplicación     | Commands completed        |
-
-**Antes de ejecutar el script 06**, abrirlo y cambiar `CambiarEstaClave123!` por una contraseña propia. Esa contraseña va solo en tu `.env` local; nunca se sube a Git.
-
----
-
-## Parte C. Verificar el usuario de la aplicación
-
-1. En SSMS, **Connect → Database Engine**:
-   - **Server name:** `localhost,1433`
-   - **Authentication:** SQL Server Authentication
-   - **Login:** `cine_app` / la contraseña elegida
-   - Marcar **Trust server certificate**
-2. Abrir una **New Query desde esa conexión** y ejecutar:
-
-```sql
-SELECT SUSER_SNAME() AS usuario_actual;                      -- debe decir cine_app
-SELECT COUNT(*) AS alquileres FROM CineStream.dbo.alquileres; -- 50000
-SELECT COUNT(*) AS sesiones FROM sys.dm_exec_sessions;        -- más de 3
+```
+npm run test:db
+npm run dev
 ```
 
-Si la tercera consulta funciona, el permiso `VIEW SERVER STATE` quedó bien.
+`http://localhost:3000/api/health` debe responder `{"api":"ok","db":"ok", ...}`.
 
-**Permisos de `cine_app`:** solo lectura y monitoreo (`db_datareader`, `VIEW SERVER STATE`, `VIEW DATABASE STATE`, `VIEW DEFINITION`, lectura en `msdb`). No puede modificar datos.
+### 3. Frontend
 
----
+En otra terminal:
 
-## Notas
+```
+cd frontend
+npm install
+npm run dev
+```
 
-- Ejecutar los scripts 01 a 05 **una sola vez**. Para empezar de cero: `DROP DATABASE CineStream;` y repetir.
-- Alquileres y reseñas son **aleatorios**: mismo volumen en cada instancia, pero no filas idénticas.
-- Si se abren los archivos en un editor que no sea SSMS, usar codificación **UTF-8** para que se vean bien las tildes.
-- Si se usa Docker en lugar de una instalación local, la Parte A no aplica: el contenedor ya expone el puerto 1433 y usa `sa`.
+Abrir `http://localhost:5173`. Vite reenvía las llamadas `/api` a la API del puerto 3000.
 
----
+## Configuración y portabilidad
 
-## Limitaciones de SQL Server Express
+- Toda la conexión (servidor, instancia, puerto, base, usuario, contraseña,
+  cifrado) se define en **un solo archivo**: `backend/.env`. No hay que modificar
+  el código para apuntar a otra instancia o base de datos.
+- `backend/.env.example` es la plantilla, sin credenciales reales.
+- `.env` está en `.gitignore`: las contraseñas nunca se suben al repositorio.
+- La aplicación usa un usuario de **mínimos privilegios** (`cine_app`), no `sa`.
 
-- **SQL Server Agent no está disponible** en Express: no se pueden programar jobs
-  (respaldos automáticos, mantenimiento programado). Todo se ejecuta manualmente
-  o desde la aplicación.
-- **El historial de respaldos (`msdb`) empieza vacío.** El Módulo 4 solo mostrará
-  datos si se realizan respaldos reales en la instancia.
+## Estructura del repositorio
 
-## Seguridad
+```
+backend/        API Express (rutas, consultas, conexión, contratos en docs/)
+database/       Scripts SQL de CineStream, usuario cine_app y objetos cineadmin
+frontend/       Aplicación React (Vite)
+README.md       Este archivo
+```
 
-- Nunca subir contraseñas reales al repositorio. La contraseña de `cine_app`
-  se elige localmente y va únicamente en el archivo `.env` de cada persona,
-  que está excluido por `.gitignore`.
+## Flujo de trabajo en Git
+
+- `main`: versión estable; solo recibe merges desde `develop` mediante PR.
+- `develop`: integración de todos los módulos.
+- `feature/personaN-...`: una rama por persona y módulo.
