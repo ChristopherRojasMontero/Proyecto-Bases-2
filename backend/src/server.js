@@ -21,6 +21,7 @@ app.get('/api/health', async (req, res) => {
 // Rutas de cada módulo (agregar todas ANTES de app.listen)
 app.use('/api/instancia', require('./routes/instancia'));         // Módulo 1 — Persona 1
 app.use('/api/almacenamiento', require('./routes/almacenamiento')); // Módulo 3 — Persona 3
+app.use('/api/respaldos', require('./routes/respaldos')); // Módulo 4 — Persona 4 
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API escuchando en http://localhost:${PORT}`));
