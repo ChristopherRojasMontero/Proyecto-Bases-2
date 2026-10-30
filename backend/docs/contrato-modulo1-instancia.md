@@ -111,6 +111,25 @@ Parámetros generales de configuración del motor.
 
 ---
 
+## GET /api/instancia/memoria
+
+Uso físico actual del proceso SQL Server junto con su límite configurado. La métrica
+proviene de `sys.dm_os_process_memory`; `porcentaje_memoria_proceso` describe el
+uso de memoria del proceso reportado por SQL Server, no el porcentaje del límite.
+
+**Respuesta (200):**
+```json
+{
+  "memoria_usada_mb": 512,
+  "memoria_maxima_configurada_mb": 2147483647,
+  "porcentaje_memoria_proceso": 34,
+  "alerta_memoria_fisica_baja": false,
+  "alerta_memoria_virtual_baja": false
+}
+```
+
+---
+
 ## Pendiente / fuera de alcance de este contrato
 
 - No se agregó autenticación de usuarios de la API (login): el proyecto no la

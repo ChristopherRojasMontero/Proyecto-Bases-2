@@ -82,4 +82,26 @@ router.get('/configuracion', async (req, res) => {
   }
 });
 
+// GET /api/instancia/memoria
+// Uso de memoria física del proceso SQL Server y máximo configurado.
+router.get('/memoria', async (req, res) => {
+  try {
+    const pool = await getPool();
+    const result = await pool.request().query(`
+      SELECT
+        CAST(m.physical_memory_in_use_kb / 1024.0 AS DECIMAL(12,2)) AS memoria_usada_mb,
+        CAST(c.value_in_use AS BIGINT) AS memoria_maxima_configurada_mb,
+        m.memory_utilization_percentage AS porcentaje_memoria_proceso,
+        m.process_physical_memory_low AS alerta_memoria_fisica_baja,
+        m.process_virtual_memory_low AS alerta_memoria_virtual_baja
+      FROM sys.dm_os_process_memory AS m
+      CROSS JOIN sys.configurations AS c
+      WHERE c.name = 'max server memory (MB)'
+    `);
+    res.json(result.recordset[0]);
+  } catch (err) {
+    res.status(500).json({ mensaje: err.message });
+  }
+});
+
 module.exports = router;
