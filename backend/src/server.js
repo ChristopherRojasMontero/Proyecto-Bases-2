@@ -29,6 +29,7 @@ app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed') return res.status(400).json({ mensaje: 'El cuerpo de la solicitud no es JSON válido.' });
   res.status(500).json({ mensaje: 'Error interno de la API.', detalle: err.message });
 });
+app.use('/api/respaldos', require('./routes/respaldos')); // Módulo 4 — Persona 4 
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
