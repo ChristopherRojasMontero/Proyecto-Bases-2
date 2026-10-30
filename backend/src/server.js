@@ -21,14 +21,10 @@ app.get('/api/health', async (req, res) => {
 
 // Rutas de cada módulo (agregar todas ANTES de app.listen)
 app.use('/api/instancia', require('./routes/instancia'));         // Módulo 1 — Persona 1
+app.use('/api/rendimiento', require('./routes/rendimiento'));       // Módulo 2 — Persona 2
 app.use('/api/almacenamiento', require('./routes/almacenamiento')); // Módulo 3 — Persona 3
+app.use('/api/respaldos', require('./routes/respaldos'));           // Módulo 4 — Persona 4
 app.use('/api/auditoria', require('./routes/auditoria'));           // Módulo 5 — Persona 5
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`API escuchando en http://localhost:${PORT}`));
-
-app.use('/api/almacenamiento', require('./routes/almacenamiento'));
-app.use('/api/rendimiento', require('./routes/rendimiento'));
 app.use('/api/mantenimiento', require('./routes/mantenimiento'));   // Módulo 6 — Persona 3 + Persona 4
 
 // Cuerpo JSON mal formado u otros errores no controlados
@@ -36,7 +32,6 @@ app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed') return res.status(400).json({ mensaje: 'El cuerpo de la solicitud no es JSON válido.' });
   res.status(500).json({ mensaje: 'Error interno de la API.', detalle: err.message });
 });
-app.use('/api/respaldos', require('./routes/respaldos')); // Módulo 4 — Persona 4 
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

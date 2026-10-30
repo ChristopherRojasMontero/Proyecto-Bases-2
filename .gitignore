@@ -40,3 +40,18 @@ build/
 .vscode/
 .DS_Store
 Thumbs.db
+.idea/
+*.iml
+Desktop.ini
+*.swp
+*~
+
+# --- Node / Vite (logs, caches, cobertura) ---
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+.eslintcache
+.vite/
+coverage/
+*.local
