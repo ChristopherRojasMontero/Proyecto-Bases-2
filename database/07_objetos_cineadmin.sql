@@ -156,13 +156,9 @@ BEGIN
 END
 GO
 
--- Módulo 6: detecta procedimientos, vistas, funciones y triggers que no compilan.
--- SQL Server no tiene un estado INVALID como Oracle, así que se usan dos pruebas:
---   1. REFERENCIA_INEXISTENTE: el módulo menciona un objeto que ya no existe
---      (sys.sql_expression_dependencies sin referenced_id).
---   2. ERROR_COMPILACION: se intenta revalidar el módulo con sp_refreshsqlmodule
---      dentro de una transacción que siempre se revierte (no cambia nada).
--- No revisa el esquema cineadmin (objetos de la propia herramienta).
+-- Modulo 6: diagnostico exclusivamente de lectura con catalogos y
+-- sys.dm_sql_referenced_entities; no refresca metadatos ni ejecuta modulos.
+-- No verifica SQL dinamico ni referencias externas.
 CREATE OR ALTER PROCEDURE cineadmin.sp_detectar_objetos_invalidos
 WITH EXECUTE AS OWNER
 AS
@@ -187,6 +183,7 @@ BEGIN
       AND d.referenced_server_name IS NULL
       AND d.referenced_database_name IS NULL
       AND d.is_ambiguous = 0
+      AND d.is_caller_dependent = 0
       AND d.referenced_entity_name NOT LIKE N'#%'
       AND OBJECT_ID(QUOTENAME(ISNULL(d.referenced_schema_name, s.name)) + N'.' + QUOTENAME(d.referenced_entity_name)) IS NULL
       AND OBJECT_ID(QUOTENAME(ISNULL(d.referenced_schema_name, N'dbo')) + N'.' + QUOTENAME(d.referenced_entity_name)) IS NULL
@@ -210,13 +207,22 @@ BEGIN
     WHILE @@FETCH_STATUS = 0
     BEGIN
         BEGIN TRY
-            BEGIN TRANSACTION;
-            EXEC sys.sp_refreshsqlmodule @name = @nombre;
-            ROLLBACK TRANSACTION;
+            IF EXISTS (
+                SELECT 1 FROM sys.sql_modules WHERE object_id = OBJECT_ID(@nombre) AND definition IS NULL)
+                INSERT INTO @resultado VALUES (@esquema, @objeto, @tipo, N'NO_EVALUABLE', N'Definición cifrada o no visible.');
+            ELSE IF EXISTS (
+                SELECT 1 FROM sys.dm_sql_referenced_entities(@nombre, N'OBJECT')
+                WHERE is_incomplete = 1 OR is_all_columns_found = 0)
+                INSERT INTO @resultado VALUES (@esquema, @objeto, @tipo, N'DEPENDENCIAS_INCOMPLETAS', N'No se pudieron enlazar todas las referencias.');
         END TRY
         BEGIN CATCH
-            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-            INSERT INTO @resultado VALUES (@esquema, @objeto, @tipo, N'ERROR_COMPILACION', ERROR_MESSAGE());
+            IF ERROR_NUMBER() NOT IN (2020, 207, 208, 209, 4104, 4121, 4413, 4512, 4513, 4502, 4514, 11514, 11526)
+                THROW;
+            INSERT INTO @resultado VALUES (@esquema, @objeto, @tipo,
+                CASE WHEN ERROR_NUMBER() IN (4502, 4514, 11514, 11526) THEN N'NO_EVALUABLE'
+                     WHEN ERROR_NUMBER() = 2020 THEN N'DEPENDENCIAS_INCOMPLETAS'
+                     ELSE N'ERROR_COMPILACION' END,
+                N'Diagnóstico de enlace SQL (' + CONVERT(NVARCHAR(10), ERROR_NUMBER()) + N'). Requiere revisión.');
         END CATCH
         FETCH NEXT FROM modulos INTO @esquema, @objeto, @tipo, @nombre;
     END
@@ -258,6 +264,11 @@ BEGIN
     BEGIN
         SET @resultado = N'ERROR';
         SET @mensaje = N'El objeto no existe o no es un procedimiento, vista, función o trigger.';
+    END
+    ELSE IF EXISTS (SELECT 1 FROM sys.crypt_properties WHERE class = 1 AND major_id = OBJECT_ID(@nombre))
+    BEGIN
+        SET @resultado = N'ERROR';
+        SET @mensaje = N'Objeto firmado: no se revalida para conservar sus firmas.';
     END
     ELSE
     BEGIN

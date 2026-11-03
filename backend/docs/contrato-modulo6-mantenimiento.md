@@ -19,10 +19,13 @@ que su código permite y validan sus parámetros. A `cine_app` se le da únicame
 | `cineadmin.sp_detectar_objetos_invalidos`   | Detecta módulos con errores de compilación           |
 | `cineadmin.sp_recompilar_objeto`            | `sp_refreshsqlmodule` + `sp_recompile`               |
 
-Cada acción queda registrada en `cineadmin.bitacora_mantenimiento`.
+Las acciones ejecutadas por los procedimientos de modificación quedan registradas
+en `cineadmin.bitacora_mantenimiento`. Un rechazo preventivo de la API por firma
+no ejecuta el procedimiento ni inserta una fila de bitácora.
 
 Errores: `400` parámetros inválidos, `403` sin permisos, `503` sin conexión o
-falta el script 07, `500` otro error. Siempre `{ "mensaje": "...", "detalle": "..." }`.
+falta el script 07, `500` otro error. Los errores técnicos quedan en el registro
+local; las respuestas de error no incluyen el mensaje interno de SQL Server.
 
 ---
 
@@ -73,12 +76,17 @@ Respuesta (`resultado`: `OK`, `PARCIAL` o `ERROR`):
 
 ## Requisito 2 — Detección de objetos inválidos (2 pts)
 
-SQL Server no tiene un estado `INVALID` como Oracle. Se usan dos pruebas:
+SQL Server no tiene un estado `INVALID` como Oracle. El GET consulta catálogos y
+`sys.dm_sql_referenced_entities`, sin `sp_refreshsqlmodule`, transacciones de
+modificación ni ejecución de módulos. Informa `ERROR_COMPILACION` para errores
+de enlace conocidos, `DEPENDENCIAS_INCOMPLETAS` cuando no puede resolver todas
+las referencias y `NO_EVALUABLE` para definiciones cifradas o limitaciones del
+diagnóstico. Los problemas de permisos o conexión no se ocultan como objetos inválidos.
 
-1. `REFERENCIA_INEXISTENTE`: el módulo menciona un objeto que no existe
-   (`sys.sql_expression_dependencies` con `referenced_id` nulo).
-2. `ERROR_COMPILACION`: `sp_refreshsqlmodule` falla al revalidar el módulo. Se
-   ejecuta dentro de una transacción que siempre se revierte, así que no cambia nada.
+No comprueba SQL dinámico ni referencias externas y no garantiza el éxito de una
+ejecución futura. Se conservan las claves `total`, `datos`, `nota` y las columnas
+de cada diagnóstico. La API consulta directamente los metadatos para que GET sea
+seguro incluso antes de actualizar el procedimiento instalado.
 
 Se revisan procedimientos, vistas, funciones y triggers DML de usuario (no los
 del esquema `cineadmin` ni los que tienen `SCHEMABINDING`, que no pueden quedar inválidos).
@@ -99,6 +107,11 @@ del esquema `cineadmin` ni los que tienen `SCHEMABINDING`, que no pueden quedar 
 ## Requisitos 3 y 4 — Recompilación y confirmación (3 + 1 pts)
 
 ### POST /objetos/recompilar
+Antes de refrescar un objeto, la API comprueba `sys.crypt_properties` y rechaza
+los objetos firmados sin ejecutarlos. El script 07 incorpora la misma protección
+dentro del procedimiento; debe aplicarse manualmente para proteger llamadas SQL
+directas. No se han cambiado permisos ni propietarios.
+
 Un objeto:
 
 ```json
@@ -144,5 +157,5 @@ dentro del script.
 
 El Módulo 5 (Auditoría, Persona 5) tiene su propio diagnóstico de objetos
 problemáticos (`/api/auditoria/objetos-problematicos`), más detallado y de solo
-lectura. El Módulo 6 usa su propia detección porque necesita el mismo criterio
-que aplica la recompilación (`sp_refreshsqlmodule`).
+lectura. Su backend y contratos no se modificaron. El Módulo 6 mantiene su
+diagnóstico de lectura con su contrato anterior; solo la acción POST revalida.

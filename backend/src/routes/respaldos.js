@@ -1,6 +1,7 @@
 const express = require('express');
 const { sql, getPool } = require('../db');
 
+const { responderError } = require('../errores');
 const router = express.Router();
 
 // Módulo 4 — Respaldos y recuperación
@@ -56,7 +57,7 @@ router.get('/', async (req, res) => {
           ) AS destino,
           'Completado' AS estado
         FROM msdb.dbo.backupset AS bs
-        WHERE bs.database_name = N'CineStream'
+        WHERE bs.database_name = DB_NAME()
           AND bs.backup_finish_date IS NOT NULL
         ORDER BY
           bs.backup_start_date DESC,
@@ -69,17 +70,12 @@ router.get('/', async (req, res) => {
       data: result.recordset
     });
   } catch (err) {
-    console.error('Error al consultar respaldos:', err.message);
-
-    res.status(500).json({
-      mensaje: 'No se pudo consultar el historial de respaldos.',
-      error: err.message
-    });
+    responderError(res, err, 'consultar los respaldos');
   }
 });
 
 // GET /api/respaldos/ultimo
-// Obtiene el respaldo completado más reciente de CineStream.
+// Obtiene el respaldo completado más reciente de la base activa.
 router.get('/ultimo', async (req, res) => {
   try {
     const pool = await getPool();
@@ -101,7 +97,7 @@ router.get('/ultimo', async (req, res) => {
           AS DECIMAL(12, 2)
         ) AS tamano_mb
       FROM msdb.dbo.backupset
-      WHERE database_name = N'CineStream'
+      WHERE database_name = DB_NAME()
         AND backup_finish_date IS NOT NULL
       ORDER BY
         backup_start_date DESC,
@@ -112,20 +108,15 @@ router.get('/ultimo', async (req, res) => {
       data: result.recordset[0] || null,
       mensaje: result.recordset.length
         ? 'Último respaldo encontrado.'
-        : 'No hay respaldos registrados para CineStream.'
+        : 'No hay respaldos registrados para la base activa.'
     });
   } catch (err) {
-    console.error('Error al consultar el último respaldo:', err.message);
-
-    res.status(500).json({
-      mensaje: 'No se pudo consultar el último respaldo.',
-      error: err.message
-    });
+    responderError(res, err, 'consultar los respaldos');
   }
 });
 
 // GET /api/respaldos/activos
-// Consulta respaldos de CineStream que están ejecutándose.
+// Consulta respaldos de la base activa que están ejecutándose.
 router.get('/activos', async (req, res) => {
   try {
     const pool = await getPool();
@@ -140,7 +131,7 @@ router.get('/activos', async (req, res) => {
         r.estimated_completion_time AS milisegundos_estimados
       FROM sys.dm_exec_requests AS r
       WHERE r.command LIKE 'BACKUP%'
-        AND r.database_id = DB_ID(N'CineStream')
+        AND r.database_id = DB_ID()
       ORDER BY r.start_time DESC;
     `);
 
@@ -149,12 +140,7 @@ router.get('/activos', async (req, res) => {
       data: result.recordset
     });
   } catch (err) {
-    console.error('Error al consultar respaldos activos:', err.message);
-
-    res.status(500).json({
-      mensaje: 'No se pudieron consultar los respaldos activos.',
-      error: err.message
-    });
+    responderError(res, err, 'consultar los respaldos');
   }
 });
 

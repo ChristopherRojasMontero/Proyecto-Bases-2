@@ -6,8 +6,9 @@ Estado: borrador de contrato (aún sin implementar; los ejemplos son la forma es
 
 Todas las rutas son `GET`, no requieren autenticación propia (la API se conecta
 a SQL Server con el usuario `cine_app`, que tiene `VIEW SERVER STATE`) y
-devuelven JSON. Si falla la consulta, cualquier ruta responde `500` con
-`{ "mensaje": "..." }`. Si un parámetro de consulta no es válido, responde
+devuelven JSON. Si falla la consulta, responde `403` por permisos, `503` por
+conexión o `500` para otros errores, con `mensaje` y `detalle` controlados.
+El error técnico completo queda en el registro local. Si un parámetro de consulta no es válido, responde
 `400` con `{ "mensaje": "..." }`.
 
 Todos los tiempos van en **milisegundos** y las fechas en formato ISO.

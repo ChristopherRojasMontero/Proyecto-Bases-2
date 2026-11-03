@@ -6,7 +6,9 @@ Estado: probado y funcionando (ver respuestas de ejemplo abajo)
 
 Todas las rutas son `GET`, no requieren parámetros ni autenticación propia
 (la API se conecta a SQL Server con el usuario `cine_app`), y devuelven JSON.
-Si falla la consulta, cualquier ruta responde `500` con `{ "mensaje": "..." }`.
+Si falla la consulta, responde `403` por permisos, `503` por conexión o `500`
+para otros errores. El JSON conserva `mensaje` y puede incluir un `detalle`
+controlado; el error técnico completo queda en el registro local de la API.
 
 ---
 

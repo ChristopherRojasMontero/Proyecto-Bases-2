@@ -12,6 +12,10 @@
 
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
+// Los DATETIME/DATE históricos de SQL Server contienen hora local, sin zona.
+// Fijar la zona del proceso antes de que Tedious cree o interprete fechas.
+process.env.TZ = process.env.DB_TIMEZONE || 'America/Costa_Rica';
+new Intl.DateTimeFormat('es-CR', { timeZone: process.env.TZ }); // validar configuración
 const sql = require('mssql');
 
 const faltantes = ['DB_USER', 'DB_PASSWORD'].filter((nombre) => !process.env[nombre]);
@@ -28,6 +32,7 @@ const config = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   options: {
+    useUTC: false,
     encrypt: process.env.DB_ENCRYPT !== 'false',
     trustServerCertificate: process.env.DB_TRUST_CERT === 'true',
   },
@@ -55,14 +60,4 @@ function getPool() {
   return poolPromise;
 }
 
-function describirConexion() {
-  return {
-    servidor: config.server,
-    instancia: instancia || null,
-    puerto: config.port || null,
-    base_de_datos: config.database,
-    usuario: config.user,
-  };
-}
-
-module.exports = { sql, getPool, describirConexion };
+module.exports = { sql, getPool };

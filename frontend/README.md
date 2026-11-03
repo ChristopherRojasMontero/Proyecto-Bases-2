@@ -4,7 +4,7 @@ Aplicación React para visualizar el estado administrativo de SQL Server. La vis
 
 ## Requisitos
 
-- Node.js 18 o superior.
+- Node.js 20.19+ (rama 20) o 22.12+ (ramas 22 y posteriores).
 - API del backend en `http://localhost:3000`.
 
 ## Inicio local
@@ -35,3 +35,12 @@ Abre `http://localhost:5173`. Vite reenvía las solicitudes `/api` al backend en
 - **Mantenimiento:** estado de estadísticas, objetos inválidos e historial. Las acciones se confirman antes de enviarse al backend.
 
 La memoria usada corresponde a la memoria física que SQL Server informa para su proceso; el límite se presenta por separado como configuración del motor.
+
+Las consultas conservan las secciones exitosas cuando otra falla. Cada sección
+afectada muestra su error; sus valores fallidos no se presentan como datos antiguos
+actualizados. El encabezado distingue la comprobación de instancia del estado y
+la última consulta con datos del módulo visible. Una actualización más reciente
+cancela e invalida la anterior, incluso al abandonar el módulo.
+
+Los requisitos se comprobaron con el lockfile: Vite 7.3.7 y plugin React 5.2.0
+declaran `^20.19.0 || >=22.12.0`. No se actualizaron dependencias.
