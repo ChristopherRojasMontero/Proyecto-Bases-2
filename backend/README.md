@@ -6,7 +6,7 @@ a la aplicación web.
 
 ## Requisitos previos
 
-1. **Node.js** 18 o superior (probado con v22 y v24).
+1. **Node.js** 20.19+ (rama 20) o 22.12+ (ramas 22 y posteriores) (probado con v22 y v24).
 2. La base de datos, el usuario `cine_app` y los objetos `cineadmin` ya creados en SQL Server.
    Ver [`../database/README.md`](../database/README.md), Partes A, B y C (scripts 01 a 07).
 
@@ -35,6 +35,7 @@ npm install
 | `DB_PORT`                        | Puerto TCP (se ignora si se usa `DB_INSTANCE`)                     | `1433`       |
 | `DB_INSTANCE`                    | Opcional. Instancia con nombre (requiere SQL Server Browser)       | vacío o `SQLEXPRESS` |
 | `DB_NAME`                        | Base de datos                                                      | `CineStream` |
+| `DB_TIMEZONE`                    | Zona IANA de las fechas locales almacenadas en SQL Server           | `America/Costa_Rica` |
 | `DB_USER`                        | Usuario de la aplicación                                           | `cine_app`   |
 | `DB_PASSWORD`                    | Contraseña (solo en tu `.env` local)                               |              |
 | `DB_ENCRYPT`                     | Cifrar la conexión                                                 | `true`       |
@@ -43,8 +44,24 @@ npm install
 | `REGISTRO_ALMACENAMIENTO_HORAS`  | Cada cuántas horas guardar una medición de tamaño (Módulo 3); `0` la desactiva | `24` |
 
 Para monitorear otra instancia o base basta con cambiar estos valores; no hay
-que tocar el código. `GET /api/health` muestra a qué servidor, instancia y base
-está conectada la API (sin la contraseña).
+que tocar el código. `GET /api/health` informa disponibilidad, sin publicar los
+datos de conexión. La identidad administrativa se consulta en Estado de instancia.
+
+La API escucha exclusivamente en `127.0.0.1`; Vite utiliza esa misma dirección
+para el proxy. Es una aplicación académica local, sin autenticación. Compartirla
+con otros dispositivos requiere revisar y autorizar antes el modelo de acceso.
+
+### Fechas históricas
+
+`DB_TIMEZONE` indica la zona IANA de las fechas locales de SQL Server; por defecto
+es `America/Costa_Rica`. La conexión usa `useUTC: false` y fija la zona del proceso
+Node a ese valor antes de decodificar fechas. Los valores DATE/DATETIME/DATETIME2
+históricos se conservan; la API serializa instantes ISO y React los presenta en
+la zona del navegador, una sola vez. No se suman ni restan seis horas manualmente.
+
+La zona debe coincidir con la instancia que generó los registros, incluidos
+`msdb` y las fechas de los catálogos. Esta corrección no convierte registros que
+ya hubieran sido almacenados como UTC o mezclaran varias zonas.
 
 ## Comandos
 
@@ -53,6 +70,16 @@ está conectada la API (sin la contraseña).
 | `npm run test:db`  | Prueba la conexión y mide el tiempo de tres consultas          |
 | `npm run dev`      | Inicia la API y la reinicia al guardar cambios                 |
 | `npm start`        | Inicia la API                                                  |
+
+Pruebas de regresión aisladas (sin conexión SQL ni acciones reales), desde la raíz:
+
+```bash
+node --test backend/test/correcciones-auditoria.test.js frontend/src/useModuleData.test.js
+```
+
+Para aplicar únicamente las correcciones de procedimientos, seguir
+[`docs/aplicar-correcciones-auditoria.md`](docs/aplicar-correcciones-auditoria.md).
+El inicio de la API no instala ni actualiza procedimientos.
 
 Con la API corriendo, `http://localhost:3000/api/health` debe responder
 `{"api":"ok","db":"ok", ...}`.

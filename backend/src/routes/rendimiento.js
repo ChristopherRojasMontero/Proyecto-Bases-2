@@ -1,6 +1,7 @@
 // Módulo 2: Monitoreo de rendimiento. Contrato: backend/docs/contrato-modulo2-rendimiento.md
 const express = require('express');
 const { sql, getPool } = require('../db');
+const { responderError } = require('../errores');
 const router = express.Router();
 
 const LIMITE_POR_DEFECTO = 10;
@@ -65,7 +66,7 @@ router.get('/consultas-top', async (req, res) => {
       `);
     res.json(result.recordset);
   } catch (err) {
-    res.status(500).json({ mensaje: err.message });
+    responderError(res, err, 'consultar rendimiento');
   }
 });
 
@@ -82,7 +83,7 @@ router.get('/tiempo-promedio', async (req, res) => {
     `);
     res.json(result.recordset[0]);
   } catch (err) {
-    res.status(500).json({ mensaje: err.message });
+    responderError(res, err, 'consultar rendimiento');
   }
 });
 
@@ -108,7 +109,7 @@ router.get('/sesiones-activas', async (req, res) => {
     `);
     res.json(result.recordset);
   } catch (err) {
-    res.status(500).json({ mensaje: err.message });
+    responderError(res, err, 'consultar rendimiento');
   }
 });
 
@@ -134,7 +135,7 @@ router.get('/sesiones-bloqueadas', async (req, res) => {
     `);
     res.json(result.recordset);
   } catch (err) {
-    res.status(500).json({ mensaje: err.message });
+    responderError(res, err, 'consultar rendimiento');
   }
 });
 
@@ -160,7 +161,7 @@ router.get('/procesos-recursos', async (req, res) => {
       `);
     res.json(result.recordset);
   } catch (err) {
-    res.status(500).json({ mensaje: err.message });
+    responderError(res, err, 'consultar rendimiento');
   }
 });
 

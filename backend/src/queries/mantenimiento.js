@@ -2,6 +2,7 @@
 // Las acciones se hacen mediante procedimientos del esquema cineadmin
 // (database/07_objetos_cineadmin.sql); cine_app solo tiene permiso de EXECUTE sobre ellos.
 const { sql, getPool } = require('../db');
+const { detectarObjetosInvalidos } = require('./diagnostico-mantenimiento');
 
 const UMBRAL_PORCENTAJE = 20;
 const UMBRAL_DIAS = 7;
@@ -78,18 +79,6 @@ async function actualizarEstadisticas({ esquema = null, tabla = null, modo = 'MU
   };
 }
 
-// Objetos (procedimientos, vistas, funciones, triggers) que no compilan.
-async function detectarObjetosInvalidos() {
-  const pool = await getPool();
-  const result = await pool.request().execute('cineadmin.sp_detectar_objetos_invalidos');
-  const datos = result.recordset;
-  return {
-    total: new Set(datos.map((d) => `${d.esquema}.${d.objeto}`)).size,
-    datos,
-    nota: 'SQL Server no tiene un estado INVALID como Oracle: se detectan referencias a objetos inexistentes y módulos que fallan al revalidarse con sp_refreshsqlmodule.',
-  };
-}
-
 // Recompila un objeto; si lista es null recompila todos los detectados como inválidos.
 async function recompilarObjetos(lista) {
   const pool = await getPool();
@@ -102,6 +91,17 @@ async function recompilarObjetos(lista) {
 
   const datos = [];
   for (const { esquema, objeto } of objetos) {
+    // Protección también con el procedimiento antiguo, hasta aplicar el script 07.
+    const firmas = await pool.request()
+      .input('esquema', sql.NVarChar(128), esquema)
+      .input('objeto', sql.NVarChar(128), objeto)
+      .query(`SELECT COUNT(*) AS firmas FROM sys.crypt_properties
+              WHERE class = 1 AND major_id = OBJECT_ID(QUOTENAME(@esquema) + '.' + QUOTENAME(@objeto))`);
+    if (firmas.recordset[0].firmas > 0) {
+      datos.push({ objeto: `[${esquema}].[${objeto}]`, resultado: 'ERROR',
+        mensaje: 'Objeto firmado: no se revalida para conservar sus firmas.', duracion_ms: 0 });
+      continue;
+    }
     const result = await pool.request()
       .input('esquema', sql.NVarChar(128), esquema)
       .input('objeto', sql.NVarChar(128), objeto)
