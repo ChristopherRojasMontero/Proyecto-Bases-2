@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useModuleData } from './useModuleData';
 
 const modules = [
@@ -15,6 +15,11 @@ const moduleNames = {
   overview: 'Vista general', instance: 'Estado de instancia', performance: 'Rendimiento',
   storage: 'Almacenamiento', backup: 'Respaldo y recuperación', audit: 'Auditoría', maintenance: 'Mantenimiento',
 };
+
+function moduleFromLocation() {
+  const id = window.location.hash.replace(/^#\/?/, '').split('?')[0];
+  return modules.some((item) => item.id === id) ? id : 'overview';
+}
 
 function Icon({ name, size = 18 }) {
   const paths = {
@@ -500,7 +505,17 @@ function MaintenancePage({ data, state, error, updatedAt, onRefresh, errors = {}
 }
 
 export default function App() {
-  const [active, setActive] = useState('overview');
+  const [active, setActiveState] = useState(moduleFromLocation);
+  const setActive = (id) => {
+    setActiveState(id);
+    const nextHash = id === 'overview' ? '' : `/${id}`;
+    if (window.location.hash !== nextHash) window.location.hash = nextHash;
+  };
+  useEffect(() => {
+    const syncFromLocation = () => setActiveState(moduleFromLocation());
+    window.addEventListener('hashchange', syncFromLocation);
+    return () => window.removeEventListener('hashchange', syncFromLocation);
+  }, []);
   const instance = useInstanceData();
   const storage = useStorageData(active === 'storage');
   const performance = usePerformanceData(active === 'performance');

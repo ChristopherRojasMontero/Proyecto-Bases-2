@@ -29,9 +29,9 @@ React (frontend/)  --->  API REST Node.js + Express (backend/)  --->  SQL Server
 | 1      | Estado de la instancia      | `/api/instancia`       | Persona 1          |
 | 2      | Monitoreo de rendimiento    | `/api/rendimiento`     | Persona 2          |
 | 3      | Gestión del almacenamiento  | `/api/almacenamiento`  | Persona 3          |
-| 4      | Respaldo y recuperación     | `/api/respaldos`        | Persona 4          |
-| 5      | Auditoría                   | `/api/auditoria`       | Persona 5          |
-| 6      | Mantenimiento preventivo    | `/api/mantenimiento`   | Persona 3 y 4      |
+| 4      | Respaldo y recuperación     | `/api/respaldos`      | Persona 4           |
+| 5      | Auditoría                   | `/api/auditoria`      | Persona 5           |
+| 6      | Mantenimiento preventivo    | `/api/mantenimiento`  | Persona 3 y 4       |
 
 Los contratos de cada API están en `backend/docs/`.
 
@@ -80,6 +80,39 @@ npm run dev
 ```
 
 Abrir `http://localhost:5173`. Vite reenvía las llamadas `/api` a la API del puerto 3000.
+
+## Preparación de la demo en vivo
+
+Antes de presentar, comprobar que SQL Server esté iniciado y que la base `CineStream`
+esté configurada siguiendo [`database/README.md`](database/README.md). Ejecutar los
+scripts 01 a 07 en una instancia limpia; el script 08 es opcional y prepara objetos
+para demostrar el Módulo 6.
+
+1. Iniciar la API y la interfaz en terminales separadas con `npm run dev`, desde
+   `backend/` y `frontend/`, respectivamente.
+2. Confirmar que `http://localhost:3000/api/health` responda con `"api":"ok"` y
+   `"db":"ok"`, y que la interfaz muestre la conexión disponible.
+3. Recorrer los seis módulos desde la navegación de CineAdmin. La información se
+   consulta en la instancia SQL Server configurada en `backend/.env`.
+   Las vistas también tienen enlaces directos para la demo:
+   [Estado de instancia](http://127.0.0.1:5173/#/instance),
+   [Rendimiento](http://127.0.0.1:5173/#/performance),
+   [Almacenamiento](http://127.0.0.1:5173/#/storage),
+   [Respaldos](http://127.0.0.1:5173/#/backup),
+   [Auditoría](http://127.0.0.1:5173/#/audit) y
+   [Mantenimiento](http://127.0.0.1:5173/#/maintenance).
+4. Para mostrar el historial de respaldos, generar al menos un respaldo real de
+   `CineStream` antes de la demo. En SQL Server Express, los respaldos se ejecutan
+   manualmente; `msdb` empieza sin historial.
+5. Para mostrar crecimiento, preparar con antelación más de una medición de
+   almacenamiento. `database/09_verificar_crecimiento.sql` permite revisar el
+   historial y registrar una nueva medición. La generación opcional de actividad
+   incluida al final del script agrega datos reales a `alquileres`; revisar ese
+   bloque antes de ejecutarlo.
+
+Si la API no puede conectarse a SQL Server, la interfaz informa que la instancia no
+está disponible y los módulos no muestran métricas. Resolver esa conexión antes de
+presentar resultados.
 
 ## Configuración y portabilidad
 
