@@ -3,7 +3,7 @@
 **Curso:** EIF402\
 **Proyecto:** CineAdmin\
 **Base de datos:** CineStream\
-**Periodo documentado:** 13 de agosto al 30 de octubre de 2026\
+**Periodo documentado:** 13 de agosto al 3 de noviembre de 2026\
 **Repositorio:** Repositorio grupal de GitHub
 
 ------------------------------------------------------------------------
@@ -137,10 +137,102 @@ En el historial compartido aparecen las siguientes cuentas de GitHub:
     y `develop`, así como el Pull Request #11.
 -   Con estos cambios, el repositorio refleja la integración de los
     avances de los seis módulos del proyecto.
+-   `ChristopherRojasMontero` actualiza el `.gitignore` para excluir la
+    carpeta `.idea/` del editor y ajusta `server.js` ("Arreglo 1").
+-   Se agrega el manual de usuario de CineAdmin
+    (`docs/manual_usuario.docx`) mediante el Pull Request #12.
 
-## 4. Estado del proyecto según el historial revisado
+### 2 de noviembre de 2026 -- Correcciones, evidencias e integración final
 
-Al 30 de octubre de 2026, el historial compartido muestra avances en los
-seis módulos y la integración de sus cambios mediante Pull Requests.
+-   Se corrige el inicio de la API integrada (Pull Request #13): tras los
+    merges, `server.js` tenía declarados dos veces `PORT` y `app.listen`,
+    y algunas rutas se registraban después de iniciar el servidor. Se
+    dejan registradas las rutas de los seis módulos antes del
+    middleware de errores.
+-   `Luis-Brenes-F` agrega las evidencias de pruebas de los Módulos 1 a
+    6 (Pull Request #14): 43 llamadas a la API real contra CineStream,
+    con pruebas negativas y observaciones. Reemplazan al documento de
+    evidencias que solo cubría el Módulo 2 y quedan en la carpeta
+    `docs/`.
+-   `mariacastroh-799` agrega esta bitácora de seguimiento al
+    repositorio.
+-   `Danyjosu69` corrige el cálculo del promedio diario de crecimiento
+    del Módulo 3: con mediciones separadas por segundos se proyectaba un
+    valor irreal (304 MB/día). Ahora solo se calcula con al menos 24
+    horas de mediciones y se agrega el campo `periodo_horas`. También se
+    incorpora el script `09_verificar_crecimiento.sql` para revisar y
+    registrar mediciones reales (Pull Request #15).
+-   `ChristopherRojasMontero` integra la reparación de errores detectados
+    en una auditoría del código (Pull Request #16): los errores internos
+    ya no se muestran en las respuestas de la API, la detección de
+    objetos inválidos del Módulo 6 pasa a ser de solo lectura, la
+    recompilación rechaza objetos firmados, se interpretan las fechas
+    con la zona horaria de Costa Rica y se agregan pruebas automatizadas
+    del backend y del frontend. Se retira `.idea/workspace.xml` del
+    repositorio.
+-   Se integra `develop` en `main` para la entrega (Pull Request #17).
+
+### 3 de noviembre de 2026 -- Pruebas finales con datos reales
+
+-   Se recrea la base de datos desde cero con los scripts 01 a 09 en una
+    instancia de SQL Server, sin errores.
+-   Se prueban las 30 rutas de consulta de la API contra la instancia
+    real: todas responden correctamente (HTTP 200).
+-   Se revisan las seis vistas del frontend con información real:
+    estado de la instancia, rendimiento, almacenamiento, respaldos,
+    auditoría y mantenimiento.
+-   Módulo 3: se registran tres mediciones reales del almacenamiento,
+    con actividad real entre ellas (100.000 alquileres nuevos), que
+    muestran el crecimiento de la base de datos.
+-   Módulo 4: se realiza un respaldo completo real de CineStream, que
+    aparece en el historial de `msdb` y en la aplicación.
+-   Módulo 6: se prueba el ciclo completo de mantenimiento: actualización
+    de estadísticas, detección de dos objetos inválidos, recompilación
+    con resultado ERROR, corrección de la causa y recompilación con
+    resultado OK, todo registrado en la bitácora de mantenimiento.
+-   Las pruebas automatizadas pasan: 8 del backend y 3 del frontend.
+
+## 4. Problemas encontrados y soluciones
+
+  -----------------------------------------------------------------------
+  Problema                            Solución
+  ----------------------------------- -----------------------------------
+  La API integrada no iniciaba por    Se reorganizó `server.js` con un
+  declaraciones duplicadas de `PORT`  único `app.listen` y todas las
+  y `app.listen` en `server.js`.      rutas registradas antes del
+                                      middleware de errores (PR #13).
+
+  El promedio diario de crecimiento   Solo se calcula con al menos 24
+  mostraba valores irreales con       horas de mediciones; se agregó
+  mediciones muy cercanas en el       `periodo_horas` y el script 09
+  tiempo.                             (PR #15).
+
+  SQL Server Express no tiene SQL     La API registra mediciones de
+  Server Agent para programar         almacenamiento automáticamente
+  tareas.                             mientras está encendida, y el
+                                      mantenimiento se ejecuta desde la
+                                      aplicación.
+
+  Las respuestas de error podían      Los detalles quedan solo en el
+  exponer detalles internos.          registro local de la API; el
+                                      usuario recibe mensajes claros
+                                      (PR #16).
+
+  Archivos del editor (`.idea/`)      Se agregó la carpeta al
+  incluidos en el repositorio.        `.gitignore` y se retiraron del
+                                      repositorio.
+  -----------------------------------------------------------------------
+
+## 5. Estado del proyecto según el historial revisado
+
+Al 3 de noviembre de 2026, los seis módulos están integrados en la rama
+`main` y fueron probados contra una instancia real de SQL Server. El
+repositorio contiene el código del backend y del frontend, los scripts
+de la base de datos, los contratos de API, las evidencias de pruebas, el
+manual de usuario y esta bitácora.
+
+Pendientes para cerrar la entrega: subir la presentación final,
+completar los contratos de API de los Módulos 4 y 5 y crear la etiqueta
+`v1.0-entrega-final` sobre la versión final de `main`.
 
 
