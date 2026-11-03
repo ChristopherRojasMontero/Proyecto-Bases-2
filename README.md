@@ -29,7 +29,7 @@ React (frontend/)  --->  API REST Node.js + Express (backend/)  --->  SQL Server
 | 1      | Estado de la instancia      | `/api/instancia`       | Persona 1          |
 | 2      | Monitoreo de rendimiento    | `/api/rendimiento`     | Persona 2          |
 | 3      | Gestión del almacenamiento  | `/api/almacenamiento`  | Persona 3          |
-| 4      | Respaldo y recuperación     | `/api/respaldo`        | Persona 4          |
+| 4      | Respaldo y recuperación     | `/api/respaldos`        | Persona 4          |
 | 5      | Auditoría                   | `/api/auditoria`       | Persona 5          |
 | 6      | Mantenimiento preventivo    | `/api/mantenimiento`   | Persona 3 y 4      |
 
@@ -38,7 +38,7 @@ Los contratos de cada API están en `backend/docs/`.
 ## Requisitos
 
 - Windows 10/11 (probado) con **SQL Server 2022** Express o Developer y **SSMS**.
-- **Node.js 18** o superior (probado con v22 y v24).
+- **Node.js 20.19+ (rama 20) o 22.12+ (ramas 22 y posteriores)** (probado con v22 y v24).
 - Git.
 
 ## Instalación

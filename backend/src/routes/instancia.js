@@ -4,6 +4,7 @@
 
 const express = require('express');
 const { getPool } = require('../db');
+const { responderError } = require('../errores');
 const router = express.Router();
 
 // GET /api/instancia/version
@@ -21,7 +22,7 @@ router.get('/version', async (req, res) => {
     `);
     res.json(result.recordset[0]);
   } catch (err) {
-    res.status(500).json({ mensaje: err.message });
+    responderError(res, err, 'consultar instancia');
   }
 });
 
@@ -38,7 +39,7 @@ router.get('/uptime', async (req, res) => {
     `);
     res.json(result.recordset[0]);
   } catch (err) {
-    res.status(500).json({ mensaje: err.message });
+    responderError(res, err, 'consultar instancia');
   }
 });
 
@@ -61,7 +62,7 @@ router.get('/bases-datos', async (req, res) => {
     `);
     res.json(result.recordset);
   } catch (err) {
-    res.status(500).json({ mensaje: err.message });
+    responderError(res, err, 'consultar instancia');
   }
 });
 
@@ -78,7 +79,7 @@ router.get('/configuracion', async (req, res) => {
     `);
     res.json(result.recordset);
   } catch (err) {
-    res.status(500).json({ mensaje: err.message });
+    responderError(res, err, 'consultar instancia');
   }
 });
 
@@ -100,7 +101,7 @@ router.get('/memoria', async (req, res) => {
     `);
     res.json(result.recordset[0]);
   } catch (err) {
-    res.status(500).json({ mensaje: err.message });
+    responderError(res, err, 'consultar instancia');
   }
 });
 
