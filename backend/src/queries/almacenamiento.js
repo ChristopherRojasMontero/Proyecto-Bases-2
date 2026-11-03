@@ -171,7 +171,8 @@ async function obtenerHistorialCrecimiento(dias) {
     resumen.hasta = ultima.fecha_medicion;
     resumen.crecimiento_datos_mb = Number((ultima.datos_usado_mb - primera.datos_usado_mb).toFixed(2));
     resumen.crecimiento_total_mb = Number((ultima.tamano_total_mb - primera.tamano_total_mb).toFixed(2));
-    resumen.crecimiento_diario_mb = diasTranscurridos > 0
+    resumen.periodo_horas = Number((diasTranscurridos * 24).toFixed(2));
+    resumen.crecimiento_diario_mb = diasTranscurridos >= 1
       ? Number((resumen.crecimiento_datos_mb / diasTranscurridos).toFixed(3)) : null;
   }
   return { resumen, mediciones };

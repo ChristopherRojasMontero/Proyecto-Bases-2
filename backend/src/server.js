@@ -28,7 +28,7 @@ app.use('/api/respaldos', require('./routes/respaldos'));           // Módulo 4
 app.use('/api/auditoria', require('./routes/auditoria'));           // Módulo 5 — Persona 5
 app.use('/api/mantenimiento', require('./routes/mantenimiento'));   // Módulo 6 — Persona 3 + Persona 4
 
-// Cuerpo JSON mal formado u otros errores no controlados
+// Cuerpo JSON mal formado u otros errores no controlados.
 app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed') return res.status(400).json({ mensaje: 'El cuerpo de la solicitud no es JSON válido.' });
   console.error('Error no controlado en la API.', err);
