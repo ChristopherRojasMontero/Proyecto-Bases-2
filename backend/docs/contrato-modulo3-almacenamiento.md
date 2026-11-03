@@ -119,13 +119,15 @@ Configuración actual de autogrowth.
 
 ### GET /crecimiento/historial?dias=30
 `variacion_mb` es la diferencia de datos usados respecto a la medición anterior.
-`resumen` solo trae `crecimiento_*` cuando hay al menos 2 mediciones.
+`resumen` solo trae `crecimiento_*` y `periodo_horas` cuando hay al menos 2 mediciones.
+`crecimiento_diario_mb` solo se calcula si las mediciones cubren al menos 24 horas;
+con un periodo menor vale `null`, para no proyectar a un día un cambio de minutos.
 
 ```json
 {
   "resumen": { "mediciones": 3, "dias_consultados": 30, "desde": "2026-10-26T20:00:00.000Z",
                "hasta": "2026-10-28T20:00:00.000Z", "crecimiento_datos_mb": 4.25,
-               "crecimiento_total_mb": 0, "crecimiento_diario_mb": 2.125 },
+               "crecimiento_total_mb": 0, "periodo_horas": 48, "crecimiento_diario_mb": 2.125 },
   "mediciones": [
     { "fecha_medicion": "2026-10-26T20:00:00.000Z", "tamano_total_mb": 144, "datos_asignado_mb": 136,
       "datos_usado_mb": 117.25, "log_asignado_mb": 8, "log_usado_mb": 1.1, "variacion_mb": 0 }

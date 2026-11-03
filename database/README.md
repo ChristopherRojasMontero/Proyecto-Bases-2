@@ -68,6 +68,7 @@ Ejecutar los scripts **en orden numérico** desde SSMS, conectado como administr
 | 6     | `06_crear_usuario_app.sql`    | Crea el usuario `cine_app` para la aplicación               | Commands completed        |
 | 7     | `07_objetos_cineadmin.sql`    | Esquema `cineadmin`: historial de almacenamiento, bitácora y procedimientos de mantenimiento (Módulos 3 y 6) | Una fila `registrado = 1` |
 | 8     | `08_demo_mantenimiento.sql`   | **Opcional.** Objetos de demostración para el Módulo 6      | Ver instrucciones dentro  |
+| 9     | `09_verificar_crecimiento.sql` | Módulo 3: revisa el historial de mediciones, registra una nueva y (opcional) genera actividad real para comparar | Mediciones y variación    |
 
 **Antes de ejecutar el script 06**, abrirlo y cambiar `CambiarEstaClave123!` por una contraseña propia. Esa contraseña va solo en tu `.env` local; nunca se sube a Git.
 
